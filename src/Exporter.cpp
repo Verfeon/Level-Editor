@@ -1,8 +1,8 @@
 #include "Exporter.h"
 #include <fstream>
 
-void Exporter::exportToJson(const Level& level, const std::string& path) {
-    std::ofstream file(path);
+void Exporter::exportToJson(const Level& level, const std::string& filename) {
+    std::ofstream file("../exports/" + filename);
 
     file << "{\n";
     file << "  \"version\": " << level.version << ",\n";
