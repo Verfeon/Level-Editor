@@ -2,6 +2,7 @@
 #include "Level.h"
 #include "Validator.h"
 #include "Exporter.h"
+#include "Importer.h"
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
@@ -25,9 +26,14 @@ void save() {
     if (!Validator::validate(level, error)) {
         std::cerr << "Validation échouée: " << error << std::endl;
     } else {
-        Exporter::exportToJson(level, "level_01.json");
+        Exporter::exportToJson(level);
         std::cout << "Niveau exporté avec succès\n";
     }
+}
+
+void open() {
+    level = Importer::importFromJson();
+    std::cout << "Niveau importé avec succès\n";
 }
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
@@ -88,7 +94,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
+            if (ImGui::MenuItem("Open..", "Ctrl+O")) { open(); }
             if (ImGui::MenuItem("Save", "Ctrl+S"))   { save();}
             ImGui::EndMenu();
         }
@@ -97,6 +103,9 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     
     if ((io.KeyCtrl) && ImGui::IsKeyPressed(ImGuiKey_S)) {
         save();
+    }
+    if ((io.KeyCtrl) && ImGui::IsKeyPressed(ImGuiKey_O)) {
+        open();
     }
 
     ImGui::End();

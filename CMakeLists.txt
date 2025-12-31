@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(level_editor
     VERSION 1.0
-    LANGUAGES CXX
+    LANGUAGES C CXX
 )
 
 # Standard C++
@@ -13,6 +13,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Sources
 file(GLOB_RECURSE SOURCES
     src/*.cpp
+    nativefiledialog/src/nfd_win.cpp
+    nativefiledialog/src/nfd_common.c
     imgui/imgui.cpp
     imgui/imgui_draw.cpp
     imgui/imgui_tables.cpp
@@ -32,6 +34,9 @@ add_executable(level_editor ${SOURCES} src/main.cpp)
 target_include_directories(level_editor
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/json
+        ${PROJECT_SOURCE_DIR}/nativefiledialog/src
+        ${PROJECT_SOURCE_DIR}/nativefiledialog/src/include
         ${PROJECT_SOURCE_DIR}/SDL3-3.2.28/x86_64-w64-mingw32/include
         ${PROJECT_SOURCE_DIR}/imgui
         ${PROJECT_SOURCE_DIR}/imgui/backends
@@ -64,6 +69,9 @@ add_executable(test ${SOURCES}
 target_include_directories(test
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/json
+        ${PROJECT_SOURCE_DIR}/nativefiledialog/src
+        ${PROJECT_SOURCE_DIR}/nativefiledialog/src/include
         ${PROJECT_SOURCE_DIR}/SDL3-3.2.28/x86_64-w64-mingw32/include
         ${PROJECT_SOURCE_DIR}/imgui
         ${PROJECT_SOURCE_DIR}/imgui/backends
