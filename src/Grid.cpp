@@ -1,4 +1,4 @@
-#include "Grid.h"
+#include "Grid.hpp"
 #include <stdexcept>
 
 Grid::Grid(int w, int h) : m_width(w), m_height(h),

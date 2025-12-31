@@ -1,4 +1,4 @@
-#include "Validator.h"
+#include "Validator.hpp"
 
 bool Validator::validate(const Level& level, std::string& error) {
     int spawnCount = 0;

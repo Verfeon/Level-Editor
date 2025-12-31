@@ -1,8 +1,8 @@
 #define SDL_MAIN_USE_CALLBACKS 1 
-#include "Level.h"
-#include "Validator.h"
-#include "Exporter.h"
-#include "Importer.h"
+#include "Level.hpp"
+#include "Validator.hpp"
+#include "Exporter.hpp"
+#include "Importer.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"

@@ -1,6 +1,6 @@
 #pragma once
-#include "Grid.h"
-#include "Entity.h"
+#include "Grid.hpp"
+#include "Entity.hpp"
 #include <vector>
 
 struct Level {
