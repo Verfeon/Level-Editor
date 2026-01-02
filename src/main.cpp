@@ -1,4 +1,5 @@
 #define SDL_MAIN_USE_CALLBACKS 1 
+#include "TileTypeRegistry.hpp"
 #include "Level.hpp"
 #include "Validator.hpp"
 #include "Exporter.hpp"
@@ -19,20 +20,21 @@ const int FRAME_DELAY = 1000 / FPS;
 const int NB_ROWS = 10;
 const int NB_COLS = 10;
 
-Level level(NB_ROWS, NB_COLS);
+Level* level = nullptr;
+TileTypeRegistry tileTypeRegistry;
 
 void save() {
     std::string error;
-    if (!Validator::validate(level, error)) {
-        std::cerr << "Validation échouée: " << error << std::endl;
+    if (!Validator::validate(*level, tileTypeRegistry, error)) {
+        std::cout << "Validation échouée: " << error << std::endl;
     } else {
-        Exporter::exportToJson(level);
+        Exporter::exportToJson(*level, tileTypeRegistry);
         std::cout << "Niveau exporté avec succès\n";
     }
 }
 
 void open() {
-    level = Importer::importFromJson();
+    *level = Importer::importFromJson();
     std::cout << "Niveau importé avec succès\n";
 }
 
@@ -48,6 +50,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
+    level = new Level(NB_COLS, NB_ROWS);
+    tileTypeRegistry.add(TileType("test"));
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -57,7 +62,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     ImGui::StyleColorsDark();
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
-    level.entities.push_back({ "spawn", "player_spawn", 1, 1, {} });
+    level->entities.push_back({ "spawn", "player_spawn", 1, 1, {} });
 
     return SDL_APP_CONTINUE;
 }
@@ -129,18 +134,18 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     int col = (mouse_x * NB_COLS) / grid_size.x;
     int row = (mouse_y * NB_ROWS) / grid_size.y;
     bool isCellCorrect = (row >= 0 && row < NB_ROWS && col >= 0 && col < NB_COLS);
-    static Tile drag_value;
+    static TileType drag_value;
     static bool dragging = false;
 
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && isCellCorrect) {
         if (row >= 0 && row < NB_ROWS && col >= 0 && col < NB_COLS) {
-            drag_value = static_cast<Tile>(1 - static_cast<int>(level.grid.getTile(col, row)));
+            drag_value = (level->grid.getTile(col, row) == tileTypeRegistry.get("default")) ? tileTypeRegistry.get("test") : tileTypeRegistry.get("default");
         }
         dragging = true;
     }
 
     if (dragging && isCellCorrect) {
-        level.grid.setTile(col, row, drag_value);
+        level->grid.setTile(col, row, drag_value);
     }
 
     if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
@@ -153,7 +158,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             snprintf(window_name, sizeof(window_name), "Cell %d, %d", row, col);    
             ImGui::BeginChild(window_name, ImVec2(cell_width, cell_height), ImGuiChildFlags_Borders, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
             
-            if (level.grid.getTile(col, row) == Tile::Wall) {
+            if (level->grid.getTile(col, row).name != tileTypeRegistry.get("default").name) {
                 ImVec2 pmin = ImGui::GetCursorScreenPos();
                 ImVec2 win_size = ImGui::GetContentRegionAvail();
                 ImVec2 pmax = ImVec2(pmin.x + win_size.x, pmin.y + win_size.y);

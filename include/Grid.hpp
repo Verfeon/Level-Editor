@@ -1,25 +1,29 @@
 #pragma once
+
+#include "json.hpp"
+#include "TileType.hpp"
+#include "TileTypeRegistry.hpp"
 #include <vector>
 
-enum class Tile {
-    Floor = 0,
-    Wall  = 1
-};
+using json = nlohmann::json;
 
 class Grid {
 public:
     Grid(int w, int h);
 
-    void setTile(int x, int y, Tile tile);
-    Tile getTile(int x, int y) const;
+    void setTile(int x, int y, TileType tile);
+    TileType getTile(int x, int y) const;
 
     int width() const;
     int height() const;
 
-    const std::vector<std::vector<Tile>>& data() const;
+    const std::vector<std::vector<TileType>>& data() const;
+
+    static Grid fromJson(const json j, const TileTypeRegistry& registry);
+    json toJson() const;
 
 private:
     int m_width;
     int m_height;
-    std::vector<std::vector<Tile>> m_tiles;
+    std::vector<std::vector<TileType>> m_tiles;
 };

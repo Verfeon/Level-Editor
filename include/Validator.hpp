@@ -4,5 +4,5 @@
 
 class Validator {
 public:
-    static bool validate(const Level& level, std::string& error);
+    static bool validate(const Level& level, const TileTypeRegistry& registry, std::string& error);
 };

@@ -1,4 +1,5 @@
 #include "Importer.hpp"
+#include "TileTypeRegistry.hpp"
 #include "json.hpp"
 #include "nfd.h"
 #include <fstream>
@@ -17,21 +18,12 @@ Level Importer::importFromJson() {
     std::ifstream file = searchFile();
 
     json j = json::parse(file);
-    int width = j["grid"]["width"];
-    int height = j["grid"]["height"];
-    Level level(width, height);
-    const auto& tiles = j["grid"]["tiles"];
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            level.grid.setTile(x, y, static_cast<Tile>(tiles[y][x].get<int>()));
-        }
-    }
+    TileTypeRegistry registry = TileTypeRegistry::fromJson(j["tile_types"]);
+    Grid grid = Grid::fromJson(j["grid"], registry);
+    Level level(grid);
     const auto& entities = j["entities"];
     for (const auto& e : entities) {
-        Entity entity;
-        entity.type = e["type"].get<std::string>();
-        entity.x = e["x"].get<int>();
-        entity.y = e["y"].get<int>();
+        Entity entity = Entity::fromJson(e);
         level.entities.push_back(entity);
     }
     return level;

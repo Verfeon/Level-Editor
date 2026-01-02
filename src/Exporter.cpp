@@ -2,6 +2,7 @@
 #include "nfd.h"
 #include "json.hpp"
 #include <fstream>
+#include <iostream>
 
 using json = nlohmann::json;
 
@@ -14,46 +15,29 @@ std::ofstream Exporter::searchOrCreateFile() {
     return file;
 }
 
-void Exporter::exportToJson(const Level& level) {
+void Exporter::exportToJson(const Level& level, const TileTypeRegistry& registry) {
+    std::cout << "Exporting level to JSON..." << std::endl;
     json j;
-    j["version"] = level.version;
-    j["grid"]["width"] = level.grid.width();
-    j["grid"]["height"] = level.grid.height();
-    j["grid"]["tiles"] = level.grid.data();
-    j["entities"] = json::array();
 
-    for (Entity e : level.entities) {
-        json entity = {
-            {"id", e.id},
-            {"type", e.type},
-            {"x", e.x},
-            {"y", e.y}
-        };
-        j["entities"].push_back(entity);
-    }
-
+    j["level"] = toJson(level);
+    std::cout << "level -> json" << std::endl;
+    j["Tile types"] = registry.toJson();
+    
+    std::cout << "json created" << std::endl;
     std::ofstream file = searchOrCreateFile();
     file << j.dump(4);
 }
 
-void Exporter::exportToJson(const Level& level, const std::string& filename) {
+json Exporter::toJson(const Level& level) {
     json j;
     j["version"] = level.version;
-    j["grid"]["width"] = level.grid.width();
-    j["grid"]["height"] = level.grid.height();
-    j["grid"]["tiles"] = level.grid.data();
+    j["grid"] = level.grid.toJson();
+    std::cout << "grid -> json" << std::endl;
     j["entities"] = json::array();
 
     for (Entity e : level.entities) {
-        json entity = {
-            {"id", e.id},
-            {"type", e.type},
-            {"x", e.x},
-            {"y", e.y}
-        };
-        j["entities"].push_back(entity);
+        j["entities"].push_back(e.toJson());
     }
 
-    std::ofstream file("../exports/" + filename);
-    file << j.dump(4);
+    return j;
 }
