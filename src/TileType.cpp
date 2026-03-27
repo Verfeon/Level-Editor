@@ -1,4 +1,5 @@
 #include "TileType.hpp"
+#include <iostream>
 
 
 TileType::TileType() {

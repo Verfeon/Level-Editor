@@ -21,7 +21,7 @@ void Exporter::exportToJson(const Level& level, const TileTypeRegistry& registry
 
     j["level"] = toJson(level);
     std::cout << "level -> json" << std::endl;
-    j["Tile types"] = registry.toJson();
+    j["tile_types"] = registry.toJson();
     
     std::cout << "json created" << std::endl;
     std::ofstream file = searchOrCreateFile();

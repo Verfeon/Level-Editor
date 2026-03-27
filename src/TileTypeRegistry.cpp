@@ -36,6 +36,8 @@ TileTypeRegistry TileTypeRegistry::fromJson(const json& j) {
         TileType type = TileType::fromJson(it.value());
         registry.add(type);
     }
+    
+    return registry;
 }
 
 json TileTypeRegistry::toJson() const {

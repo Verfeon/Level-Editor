@@ -23,10 +23,10 @@ const std::vector<std::vector<TileType>>& Grid::data() const {
 }
 
 Grid Grid::fromJson(const json j, const TileTypeRegistry& registry) {
-    int width = j.at("width").get<int>();
-    int height = j.at("height").get<int>();
+    int width = j["width"].get<int>();
+    int height = j["height"].get<int>();
     Grid grid(width, height);
-    const auto& tiles = j.at("tiles");
+    const auto& tiles = j["tiles"];
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             std::string tileName = tiles[y][x].get<std::string>();
