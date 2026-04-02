@@ -8,9 +8,20 @@ using json = nlohmann::json;
 
 std::ofstream Exporter::searchOrCreateFile() {
     nfdchar_t *outPath = NULL;
-    nfdresult_t result = NFD_SaveDialog( "json", nullptr, &outPath );
-        
-    std::ofstream file(outPath);
+    nfdresult_t result = NFD_SaveDialog("json", nullptr, &outPath);
+
+    if (result != NFD_OKAY || outPath == nullptr) {
+        return std::ofstream();
+    }
+
+    std::string path(outPath);
+    const std::string ext = ".json";
+    
+    if (path.length() < ext.length() || path.substr(path.length() - ext.length()) != ext) {
+        path += ext;
+    }
+
+    std::ofstream file(path);
     free(outPath);
     return file;
 }
