@@ -30,16 +30,12 @@ std::string generateUniqueName(const std::vector<TileType>& types, const std::st
     }
 }
 
-TileTypeRegistry::TileTypeRegistry() {
-    initialize();
-}
-
 const TileType& TileTypeRegistry::get(const std::string& id) const {
     auto it = std::find_if(types.begin(), types.end(), [&id](const TileType& t) { return t.name == id; });
     if (it != types.end()) {
         return *it;
     } else {
-        std::cerr << "TileType with id '" << id << "' not found. Returning default TileType." << std::endl;
+        std::cerr << "TileType with id '" << id << "' not found. Returning first TileType." << std::endl;
         return types.at(0);
     }
 }
@@ -54,8 +50,8 @@ void TileTypeRegistry::add(TileType type) {
 }
 
 void TileTypeRegistry::remove(const std::string& id) {
-    if (id == "default") {
-        std::cerr << "Cannot remove the default TileType." << std::endl;
+    if (types.size() == 1) {
+        std::cerr << "Cannot remove the only TileType." << std::endl;
         return;
     }
     auto it = std::find_if(types.begin(), types.end(), [&id](const TileType& t) { return t.name == id; });
@@ -69,10 +65,6 @@ void TileTypeRegistry::remove(const std::string& id) {
 void TileTypeRegistry::rename(const std::string& id, std::string new_name) {
     auto it = std::find_if(types.begin(), types.end(), [&id](const TileType& t) { return t.name == id; });
     if (it != types.end()) {
-        if (id == "default") {
-            std::cerr << "Cannot rename the default TileType." << std::endl;
-            return;
-        }
         std::string unique_name = generateUniqueName(types, new_name);
         it->name = std::move(unique_name);
     } else {
@@ -89,24 +81,11 @@ void TileTypeRegistry::changeColor(const std::string& id, ImVec4 new_color) {
     }
 }
 
-void TileTypeRegistry::initialize() {
-    bool hasDefault = std::any_of(types.begin(), types.end(), [](const TileType& t) { return t.name == "default"; });
-    if (!hasDefault) {
-        TileType t = TileType("default", ImVec4(0, 0, 0, 255));
-        add(t);
-    }
-}
-
 TileTypeRegistry TileTypeRegistry::fromJson(const json& j) {
     TileTypeRegistry registry;
     for (auto it = j.begin(); it != j.end(); ++it) {
         TileType type = TileType::fromJson(it.value());
-        if (type.name != "default")
-        {
-            registry.add(type);
-        } else {
-            registry.types[0] = type;
-        }
+        registry.add(type);
     }
     
     return registry;
