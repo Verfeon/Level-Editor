@@ -6,5 +6,5 @@
 class Importer {
 public:
     static std::ifstream searchFile();
-    static Level importFromJson();
+    static Level importFromJson(TileTypeRegistry&);
 };

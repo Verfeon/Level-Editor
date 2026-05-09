@@ -91,7 +91,6 @@ The project follows a modular architecture separating concerns between data mana
 
 ## Project Structure
 
-.
 ├───exports/            \
 ├───imgui/              \
 ├───include/            \
@@ -113,14 +112,6 @@ Example:
 
 ```json
 {
-    "Tile types": {
-        "default": {
-            "name": "default"
-        },
-        "test": {
-            "name": "test"
-        }
-    },
     "level": {
         "entities": [
             {
@@ -146,6 +137,26 @@ Example:
             "width": 2
         },
         "version": 1
+    },
+    "Tile types": {
+        "default": {
+            "color": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "name": "default"
+        },
+        "test": {
+            "color": [
+                1.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "name": "test"
+        }
     }
 }
 ```

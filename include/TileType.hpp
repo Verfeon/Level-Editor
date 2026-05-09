@@ -1,15 +1,17 @@
 #pragma once
 
 #include <string>
+#include <imgui.h>
 #include "json.hpp"
 
 using json = nlohmann::json;
 
 struct TileType {
     std::string name;
+    ImVec4 color;
 
     TileType();
-    TileType(std::string name) : name(std::move(name)) {};
+    TileType(std::string name, ImVec4 color) : name(std::move(name)), color(color) {};
 
     bool operator==(const TileType& other) const;
 

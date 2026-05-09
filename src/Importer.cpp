@@ -15,11 +15,11 @@ std::ifstream Importer::searchFile() {
     return file;
 }
 
-Level Importer::importFromJson() {
+Level Importer::importFromJson(TileTypeRegistry& registry) {
     std::ifstream file = searchFile();
     
     json j = json::parse(file);
-    TileTypeRegistry registry = TileTypeRegistry::fromJson(j["tile_types"]);
+    registry = TileTypeRegistry::fromJson(j["tile_types"]);
     Grid grid = Grid::fromJson(j["level"]["grid"], registry);
     Level level(grid);
     const auto& entities = j["entities"];
