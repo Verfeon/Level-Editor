@@ -6,18 +6,25 @@
 #include <iostream>
 
 using json = nlohmann::json;
-std::ifstream Importer::searchFile() {
+bool Importer::searchFile(std::ifstream *outFile) {
     nfdchar_t *outPath = NULL;
     nfdresult_t result = NFD_OpenDialog( "json", nullptr, &outPath );
-        
-    std::ifstream file(outPath);
+    
+    if (result != NFD_OKAY || outPath == nullptr) {
+        return false;
+    }
+    outFile->open(outPath);
     free(outPath);
-    return file;
+    return true;
 }
 
-Level Importer::importFromJson(TileTypeRegistry& registry) {
-    std::ifstream file = searchFile();
-    
+bool Importer::importFromJson(Level* outLevel, TileTypeRegistry& registry) {
+    std::ifstream file;
+    if (!searchFile(&file)) {
+        std::cerr << "No file selected or failed to open file." << std::endl;
+        return false;
+    }
+
     json j = json::parse(file);
     registry = TileTypeRegistry::fromJson(j["tile_types"]);
     Grid grid = Grid::fromJson(j["level"]["grid"], registry);
@@ -27,5 +34,6 @@ Level Importer::importFromJson(TileTypeRegistry& registry) {
         Entity entity = Entity::fromJson(e);
         level.entities.push_back(entity);
     }
-    return level;
+    *outLevel = level;
+    return true;
 }

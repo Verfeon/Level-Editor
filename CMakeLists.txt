@@ -34,6 +34,8 @@ add_executable(level_editor ${SOURCES} src/main.cpp)
 target_include_directories(level_editor
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/include/Tile
+        ${PROJECT_SOURCE_DIR}/include/Serialization
         ${PROJECT_SOURCE_DIR}/json
         ${PROJECT_SOURCE_DIR}/nativefiledialog/src
         ${PROJECT_SOURCE_DIR}/nativefiledialog/src/include
@@ -69,6 +71,8 @@ add_executable(test ${SOURCES}
 target_include_directories(test
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/include/Tile
+        ${PROJECT_SOURCE_DIR}/include/Serialization
         ${PROJECT_SOURCE_DIR}/json
         ${PROJECT_SOURCE_DIR}/nativefiledialog/src
         ${PROJECT_SOURCE_DIR}/nativefiledialog/src/include

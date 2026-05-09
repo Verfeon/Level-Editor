@@ -29,7 +29,7 @@ const std::vector<ImVec4> TILE_COLORS = {
     ImVec4(1, 0, 1, 1),
     ImVec4(0, 1, 1, 1)
 };
-int TILE_COLORS_INDEX = 1;
+int TILE_COLORS_INDEX = 0;
 
 Level* level = nullptr;
 TileTypeRegistry tileTypeRegistry;
@@ -45,8 +45,11 @@ void save() {
 }
 
 void open() {
-    *level = Importer::importFromJson(tileTypeRegistry);
-    std::cout << "Niveau importé avec succès\n";
+    if (!Importer::importFromJson(level, tileTypeRegistry)) {
+        std::cout << "Échec de l'importation du niveau\n";
+    } else {
+        std::cout << "Niveau importé avec succès\n";
+    }
 }
 
 void addTileType(std::string name) {
@@ -66,8 +69,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
-    level = new Level(NB_COLS, NB_ROWS);
-    addTileType("test");
+    addTileType("default");
+    level = new Level(NB_COLS, NB_ROWS, tileTypeRegistry);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -106,7 +109,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
 
-    
+    #pragma region MenuBar
+
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, 0));
     ImGui::Begin("Menu Bar", (bool *) 0, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground);
@@ -129,12 +133,14 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         }
 
     ImGui::End();
+    #pragma endregion
 
     ImGuiStyle& style = ImGui::GetStyle();
     const float titlebar_height = style.FramePadding.y * 2 + ImGui::GetFontSize();
     static TileType drag_value;
 
-    
+    #pragma region TileSetWindow
+
     ImVec2 size(viewport->Size.x * 0.5, viewport->Size.y - titlebar_height);
     ImVec2 pos(viewport->Pos.x, viewport->Pos.y + titlebar_height);
     ImGui::SetNextWindowPos(pos);
@@ -147,6 +153,13 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             if (ImGui::MenuItem("Add", "Ctrl+A")) { addTileType("new_tile"); }
             if (ImGui::MenuItem("Remove", "Ctrl+R")) { tileTypeRegistry.remove(drag_value.name); }
             ImGui::EndMenuBar();
+        }
+        
+        if ((io.KeyCtrl) && ImGui::IsKeyPressed(ImGuiKey_A)) {
+            addTileType("new_tile");
+        }
+        if ((io.KeyCtrl) && ImGui::IsKeyPressed(ImGuiKey_R)) {
+            tileTypeRegistry.remove(drag_value.name);
         }
         ImGui::PopStyleVar();
 
@@ -215,6 +228,9 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         ImGui::PopStyleVar();
         
     ImGui::End();
+    #pragma endregion
+
+    #pragma region LevelEditor
 
     size = ImVec2(viewport->Size.x * 0.5, viewport->Size.y - titlebar_height);
     pos = ImVec2(viewport->Pos.x + size.x, viewport->Pos.y + titlebar_height);
@@ -239,7 +255,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         }
 
         if (dragging && isCellCorrect) {
-            level->grid.setTile(col, row, drag_value);
+            level->grid.setTile(col, row, tileTypeRegistry.getIndex(drag_value.name));
         }
 
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
@@ -252,14 +268,34 @@ SDL_AppResult SDL_AppIterate(void *appstate)
                 snprintf(window_name, sizeof(window_name), "Cell %d, %d", row, col);    
                 ImGui::BeginChild(window_name, ImVec2(cell_width, cell_height), ImGuiChildFlags_Borders, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
                 
-                ImVec2 pmin = ImGui::GetCursorScreenPos();
-                ImVec2 win_size = ImGui::GetContentRegionAvail();
-                ImVec2 pmax = ImVec2(pmin.x + win_size.x, pmin.y + win_size.y);
-                ImU32 color = ImGui::GetColorU32(level->grid.getTile(col, row).color);
-                ImGui::GetWindowDrawList()->AddRectFilled(pmin, pmax, color);
+                    ImVec2 pmin = ImGui::GetCursorScreenPos();
+                    ImVec2 win_size = ImGui::GetContentRegionAvail();
+                    ImVec2 pmax = ImVec2(pmin.x + win_size.x, pmin.y + win_size.y);
+                    TileTypeIndex tileIndex = level->grid.getTileIndex(col, row);
+
+                    if (tileTypeRegistry.isValid(tileIndex)) {  
+                        ImU32 color = ImGui::GetColorU32(tileTypeRegistry.get(tileIndex).color);
+                        ImGui::GetWindowDrawList()->AddRectFilled(pmin, pmax, color);
+                    } else {
+                        ImDrawList* draw = ImGui::GetWindowDrawList();
+                        draw->PushClipRect(pmin, pmax, true);
+
+                        float spacing = 10.0f;
+
+                        for (float x = pmin.x - (pmax.y - pmin.y); x < pmax.x; x += spacing)
+                        {
+                            draw->AddLine(
+                                ImVec2(x, pmin.y),
+                                ImVec2(x + (pmax.y - pmin.y), pmax.y),
+                                IM_COL32(255, 0, 255, 255)
+                            );
+                        }
+
+                        draw->PopClipRect();
+                    }
+
                 ImGui::EndChild();
                 ImGui::SameLine();
-
             }
             ImGui::NewLine();
         }
@@ -267,13 +303,15 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         ImGui::PopStyleVar();
 
     ImGui::End();
+    #pragma endregion
 
-    // Rendering
+    #pragma region rendering
     ImGui::Render();
     SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
     SDL_RenderClear(renderer);
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
     SDL_RenderPresent(renderer);
+    #pragma endregion
 
     // Cap the frame rate
     static Uint64 last_time = 0;

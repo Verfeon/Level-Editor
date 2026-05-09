@@ -9,11 +9,11 @@ struct Level {
     Grid grid;
     std::vector<Entity> entities;
 
-    Level(int w, int h) : grid(w, h) {}
+    Level(int w, int h, const TileTypeRegistry& registry) : grid(w, h, registry) {}
     Level(Grid g) : grid(g) {}
     void Resize(int w, int h);
     void changeVersion(int v) { version = v; };
 
     static Level fromJson(const json j, const TileTypeRegistry& registry);
-    json toJson() const;
+    json toJson(const TileTypeRegistry& registry) const;
 };

@@ -7,7 +7,7 @@ void Level::Resize(int w, int h) {
     int min_h = std::min(h, grid.height());
     for (int y = 0; y < min_h; y++) {
         for (int x = 0; x < min_w; x++) {
-            new_grid.setTile(x, y, grid.getTile(x, y));
+            new_grid.setTile(x, y, grid.getTileIndex(x, y));
         }
     }
     grid = new_grid;
@@ -28,10 +28,10 @@ Level Level::fromJson(const json j, const TileTypeRegistry& registry) {
     return level;
 }
 
-json Level::toJson() const {
+json Level::toJson(const TileTypeRegistry& registry) const {
     json j;
     j["version"] = version;
-    j["grid"] = grid.toJson();
+    j["grid"] = grid.toJson(registry);
     j["entities"] = json::array();
 
     for (const auto& e : entities) {

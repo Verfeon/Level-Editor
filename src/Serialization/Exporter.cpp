@@ -1,4 +1,5 @@
 #include "Exporter.hpp"
+#include "Validator.hpp"
 #include "nfd.h"
 #include "json.hpp"
 #include <fstream>
@@ -27,28 +28,20 @@ std::ofstream Exporter::searchOrCreateFile() {
 }
 
 void Exporter::exportToJson(const Level& level, const TileTypeRegistry& registry) {
+    std::string error;
+    if (!Validator::validate(level, registry, error)) {
+        std::cerr << "Validation failed: " << error << std::endl;
+        return;
+    }
+
     std::cout << "Exporting level to JSON..." << std::endl;
     json j;
 
-    j["level"] = toJson(level);
+    j["level"] = level.toJson(registry);
     std::cout << "level -> json" << std::endl;
     j["tile_types"] = registry.toJson();
     
     std::cout << "json created" << std::endl;
     std::ofstream file = searchOrCreateFile();
     file << j.dump(4);
-}
-
-json Exporter::toJson(const Level& level) {
-    json j;
-    j["version"] = level.version;
-    j["grid"] = level.grid.toJson();
-    std::cout << "grid -> json" << std::endl;
-    j["entities"] = json::array();
-
-    for (Entity e : level.entities) {
-        j["entities"].push_back(e.toJson());
-    }
-
-    return j;
 }

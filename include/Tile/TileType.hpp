@@ -9,6 +9,7 @@ using json = nlohmann::json;
 struct TileType {
     std::string name;
     ImVec4 color;
+    bool isActive = true;
 
     TileType();
     TileType(std::string name, ImVec4 color) : name(std::move(name)), color(color) {};
