@@ -5,8 +5,6 @@
 #include <vector>
 #include <string>
 
-const int NB_ROWS = 10;
-const int NB_COLS = 10;
 const std::vector<ImVec4> TILE_COLORS = {
     ImVec4(0, 0, 0, 1),
     ImVec4(1, 1, 1, 1),
@@ -24,19 +22,52 @@ void addTileType(TileTypeRegistry& registry, std::string name) {
     TILE_COLORS_INDEX = (TILE_COLORS_INDEX + 1) % TILE_COLORS.size();
 }
 
+void drawCell(Level* level, TileTypeRegistry& registry, int row, int col, int cell_width, int cell_height)
+{    
+    char window_name[32];
+    snprintf(window_name, sizeof(window_name), "Cell %d, %d", row, col);  
+    ImGui::BeginChild(window_name, ImVec2(cell_width, cell_height), ImGuiChildFlags_Borders, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+        ImVec2 pmin = ImGui::GetCursorScreenPos();
+        ImVec2 win_size = ImGui::GetContentRegionAvail();
+        ImVec2 pmax = ImVec2(pmin.x + win_size.x, pmin.y + win_size.y);
+        TileTypeIndex tileIndex = level->grid.getTileIndex(col, row);
+        
+        if (registry.isValid(tileIndex)) {  
+            ImU32 color = ImGui::GetColorU32(registry.get(tileIndex).color);
+            ImGui::GetWindowDrawList()->AddRectFilled(pmin, pmax, color);
+        } else { // if tile is invalid, draws hatching
+            ImDrawList* draw = ImGui::GetWindowDrawList();
+
+            int nb_lines = 5;
+            float spacing = (pmax.x + pmax.y - pmin.x - pmin.y)/(nb_lines+1);
+            for (float x = pmin.x - (pmax.y - pmin.y); x < pmax.x; x += spacing)
+            {
+                draw->AddLine(
+                    ImVec2(x, pmin.y),
+                    ImVec2(x + (pmax.y - pmin.y), pmax.y),
+                    IM_COL32(255, 0, 255, 255)
+                );
+            }
+        }
+    ImGui::EndChild();
+}
+
 void drawLevelWindow(TileTypeRegistry& registry, Level* level, const TileType& drag_value) 
 {    
     ImGui::Begin("Level Editor Grid");
         ImVec2 cursor_pos = ImGui::GetCursorScreenPos();
         ImVec2 grid_size = ImGui::GetContentRegionAvail();
-        const float cell_width = grid_size.x / NB_COLS;
-        const float cell_height = grid_size.y / NB_ROWS;
+        const int nb_cols = level->grid.width();
+        const int nb_rows = level->grid.height();
+        const float cell_width = grid_size.x / nb_cols;
+        const float cell_height = grid_size.y / nb_rows;
         const float mouse_x = ImGui::GetMousePos().x - cursor_pos.x;
         const float mouse_y = ImGui::GetMousePos().y - cursor_pos.y;
-        int col = (mouse_x * NB_COLS) / grid_size.x;
-        int row = (mouse_y * NB_ROWS) / grid_size.y;
-        bool isCellCorrect = (row >= 0 && row < NB_ROWS && col >= 0 && col < NB_COLS);
+        int col = (mouse_x * nb_cols) / grid_size.x;
+        int row = (mouse_y * nb_rows) / grid_size.y;
+        bool isCellCorrect = (row >= 0 && row < nb_rows && col >= 0 && col < nb_cols);
         static bool dragging = false;
+
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && isCellCorrect) {
             dragging = true;
         }
@@ -46,33 +77,10 @@ void drawLevelWindow(TileTypeRegistry& registry, Level* level, const TileType& d
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
             dragging = false;
         }
-        for (int row = 0; row < NB_ROWS; row++) {
-            for (int col = 0; col < NB_COLS; col++) {
-                char window_name[32];
-                snprintf(window_name, sizeof(window_name), "Cell %d, %d", row, col);    
-                ImGui::BeginChild(window_name, ImVec2(cell_width, cell_height), ImGuiChildFlags_Borders, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
-                    ImVec2 pmin = ImGui::GetCursorScreenPos();
-                    ImVec2 win_size = ImGui::GetContentRegionAvail();
-                    ImVec2 pmax = ImVec2(pmin.x + win_size.x, pmin.y + win_size.y);
-                    TileTypeIndex tileIndex = level->grid.getTileIndex(col, row);
-                    if (registry.isValid(tileIndex)) {  
-                        ImU32 color = ImGui::GetColorU32(registry.get(tileIndex).color);
-                        ImGui::GetWindowDrawList()->AddRectFilled(pmin, pmax, color);
-                    } else {
-                        ImDrawList* draw = ImGui::GetWindowDrawList();
-                        draw->PushClipRect(pmin, pmax, true);
-                        float spacing = 10.0f;
-                        for (float x = pmin.x - (pmax.y - pmin.y); x < pmax.x; x += spacing)
-                        {
-                            draw->AddLine(
-                                ImVec2(x, pmin.y),
-                                ImVec2(x + (pmax.y - pmin.y), pmax.y),
-                                IM_COL32(255, 0, 255, 255)
-                            );
-                        }
-                        draw->PopClipRect();
-                    }
-                ImGui::EndChild();
+
+        for (int row = 0; row < nb_rows; row++) {
+            for (int col = 0; col < nb_cols; col++) {
+                drawCell(level, registry, row, col, cell_width, cell_height);
                 ImGui::SameLine();
             }
             ImGui::NewLine();
